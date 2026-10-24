@@ -7,7 +7,7 @@ const CLE = 'simulateur-ir-maroc:v1';
 const CHAMPS = ['brut', 'cimr', 'cmr', 'amo', 'mutuelles', 'autres', 'irBulletin', 'rni'];
 const $ = (id) => document.getElementById(id);
 
-const etat = { ...ENTREES_DEFAUT, periode: 'mois', anneeDetail: 2031 };
+const etat = { ...ENTREES_DEFAUT, periode: 'mois', anneeDetail: 2031, anneeNet: 2027 };
 
 // ---------- Format ----------
 const nf = new Intl.NumberFormat('fr-FR', { maximumFractionDigits: 0 });
@@ -69,7 +69,7 @@ function rendre() {
 
   rendreGraphique(s, m);
   rendreTableau(s, m);
-  rendreBase(s);
+  rendreBase(s, m);
   rendreDetail(s);
   rendreBareme(s);
   sauver();
@@ -122,22 +122,49 @@ function rendreTableau(s, m) {
   $('tableau').innerHTML = html;
 }
 
-function rendreBase(s) {
+function rendreBase(s, m) {
   const b = s.base;
   $('blocBase').hidden = !b.avecNet;
   if (!b.avecNet) return;
-  let html = `<tbody><tr><td>Salaire brut</td><td>${dh(+etat.brut || 0, true)}</td></tr>`;
-  for (const l of b.lignes) {
-    const tag = l.deductible ? '' : ' <small>non déductible</small>';
-    html += `<tr><td>${l.libelle}${l.note && l.deductible ? `<small>${l.note}</small>` : ''}${tag}</td><td class="neg">−${dh(l.montant, true)}</td></tr>`;
+  const annee = etat.anneeNet;
+  const auj = s.annees[0];
+  const cible = s.annees.find((a) => a.annee === annee);
+  const lib = libelleAnnee(annee);
+  const unite = etat.periode === 'an' ? 'par an' : 'par mois';
+  const d2 = (v) => dh(v * m, true);
+
+  $('choixAnneeNet').innerHTML = ANNEES.slice(1).map((a) => `<button role="tab" data-annee-net="${a}" aria-selected="${a === annee}">${a}</button>`).join('');
+
+  const gain = cible.net - auj.net;
+  $('netCallout').innerHTML = gain > 0.005
+    ? `En ${lib}, votre salaire net passe de <strong>${d2(auj.net)}</strong> à <strong class="pos">${d2(cible.net)}</strong> ${unite}, soit <strong class="pos">+${d2(gain)}</strong>.`
+    : `En ${lib}, votre salaire net reste de <strong>${d2(cible.net)}</strong> ${unite}.`;
+
+  const ligne = (libelle, a, c, cls = '') => {
+    const ecart = c - a;
+    const e = Math.abs(ecart) < 0.005 ? '<span class="muted">—</span>' : `<span class="${ecart > 0 ? 'pos' : 'neg'}">${ecart > 0 ? '+' : '−'}${d2(Math.abs(ecart))}</span>`;
+    return `<tr class="${cls}"><td>${libelle}</td><td>${fmtSigne(a, m)}</td><td>${fmtSigne(c, m)}</td><td>${e}</td></tr>`;
+  };
+  let html = `<thead><tr><th></th><th>Aujourd'hui</th><th>${lib}</th><th>Écart</th></tr></thead><tbody>`;
+  html += ligne('Salaire brut', +etat.brut || 0, +etat.brut || 0);
+  for (const l of b.lignes.filter((x) => x.prelevee)) {
+    const tag = l.deductible ? (l.note ? `<small>${l.note}</small>` : '') : '<small>non déductible</small>';
+    html += ligne(`${l.libelle}${tag}`, -l.montant, -l.montant);
   }
-  html += `</tbody><tfoot><tr><td>Revenu net imposable</td><td>${dh(b.rni, true)} <small>/ mois</small></td></tr></tfoot>`;
+  html += ligne('Impôt sur le revenu (IR)', -auj.ir, -cible.ir, 'ligne-ir');
+  html += `</tbody><tfoot><tr class="ligne-net"><td>Salaire net <small>${unite}</small></td><td>${d2(auj.net)}</td><td class="pos">${d2(cible.net)}</td><td class="pos">${gain > 0.005 ? '+' + d2(gain) : '—'}</td></tr></tfoot>`;
   $('retenues').innerHTML = html;
-  let note = 'Les frais professionnels réduisent la base imposable mais ne sont pas prélevés sur votre salaire.';
+
+  const fp = b.lignes.find((x) => !x.prelevee);
+  let note = `Base de l'IR : revenu net imposable de ${dh(b.rni, true)} / mois, identique chaque année (seul le barème change). Les frais professionnels (${dh(fp.montant, true)} / mois) réduisent cette base mais ne sont pas prélevés sur votre salaire.`;
   if (b.origine === 'bulletin') {
-    note = `Revenu imposable retrouvé à partir de l'IR du bulletin (${dh(+etat.irBulletin, true)}). Calculé à partir du brut, on obtiendrait ${dh(b.rniCalcule, true)} — l'écart correspond généralement aux indemnités exonérées.`;
+    note += ` Revenu imposable retrouvé à partir de l'IR du bulletin ; calculé à partir du brut, on obtiendrait ${dh(b.rniCalcule, true)} — l'écart correspond généralement aux indemnités exonérées.`;
   }
   $('noteBase').textContent = note;
+}
+
+function fmtSigne(v, m) {
+  return v < 0 ? `<span class="neg">−${dh(-v * m, true)}</span>` : dh(v * m, true);
 }
 
 function rendreDetail(s) {
@@ -182,6 +209,10 @@ function lier() {
   document.querySelectorAll('[data-periode]').forEach((b) => b.addEventListener('click', () => { etat.periode = b.dataset.periode; rendre(); }));
   $('plus').addEventListener('click', () => { etat.personnes = Math.min(6, etat.personnes + 1); rendre(); });
   $('moins').addEventListener('click', () => { etat.personnes = Math.max(0, etat.personnes - 1); rendre(); });
+  $('choixAnneeNet').addEventListener('click', (ev) => {
+    const b = ev.target.closest('[data-annee-net]');
+    if (b) { etat.anneeNet = +b.dataset.anneeNet; rendre(); }
+  });
   $('choixAnnee').addEventListener('click', (ev) => {
     const b = ev.target.closest('[data-annee]');
     if (!b) return;
