@@ -76,23 +76,31 @@ function rendre() {
 }
 
 function rendreGraphique(s, m) {
-  const W = Math.max(300, Math.min(760, $('chart').clientWidth || 640)), H = W < 500 ? 220 : 260, top = 24, bottom = 32, left = 0;
+  const W = Math.max(300, Math.min(760, $('chart').clientWidth || 640));
+  const etroit = W < 560; // sur mobile : montants sans « DH », l'unité est rappelée dans la légende
+  const H = etroit ? 240 : 280, top = 46, bottom = 32, left = etroit ? 4 : 12;
   const max = Math.max(1, ...s.annees.map((a) => a.ir * m), ...s.annees.map((a) => a.gainVsActuel * m));
   const n = s.annees.length;
-  const slot = (W - left) / n;
+  const slot = (W - 2 * left) / n;
   const bw = Math.min(34, slot * 0.32);
   const h = (v) => ((H - top - bottom) * v) / max;
   const y0 = H - bottom;
+  const montant = (v) => (etroit ? nf.format(Math.round(v)) : dh(v));
+  const taille = etroit ? 10 : 12;
+  $('uniteGraphique').textContent = etroit ? (etat.periode === 'an' ? ' · en DH / an' : ' · en DH / mois') : '';
   let svg = `<svg viewBox="0 0 ${W} ${H}" aria-hidden="true"><line class="axis" x1="0" x2="${W}" y1="${y0}" y2="${y0}"/>`;
   s.annees.forEach((a, i) => {
     const cx = left + slot * i + slot / 2;
     const ir = a.ir * m, g = Math.max(0, a.gainVsActuel * m);
     const xi = cx - bw - 2, xg = cx + 2;
+    // Étiquettes empilées et centrées au-dessus de la plus haute barre de l'année.
+    const yIr = y0 - h(Math.max(ir, g)) - 6;
+    const yG = yIr - taille - 4;
     svg += `<rect class="bar-ir" x="${xi}" y="${y0 - h(ir)}" width="${bw}" height="${Math.max(0, h(ir))}" rx="4"><title>IR ${libelleAnnee(a.annee)} : ${dh(ir)}</title></rect>`;
-    svg += `<text class="val" x="${xi + bw / 2}" y="${y0 - h(ir) - 6}" text-anchor="middle">${k(Math.round(ir))}</text>`;
+    svg += `<text class="val" x="${cx}" y="${yIr}" text-anchor="middle" style="font-size:${taille}px">${montant(ir)}</text>`;
     if (g > 0) {
       svg += `<rect class="bar-gain" x="${xg}" y="${y0 - h(g)}" width="${bw}" height="${h(g)}" rx="4"><title>Gain ${libelleAnnee(a.annee)} : ${dh(g)}</title></rect>`;
-      svg += `<text class="val" x="${xg + bw / 2}" y="${y0 - h(g) - 6}" text-anchor="middle" style="fill:var(--gain)">${k(Math.round(g))}</text>`;
+      svg += `<text class="val" x="${cx}" y="${yG}" text-anchor="middle" style="fill:var(--gain);font-size:${taille}px">+${montant(g)}</text>`;
     }
     svg += `<text x="${cx}" y="${H - 10}" text-anchor="middle">${libelleAnnee(a.annee)}</text>`;
   });
