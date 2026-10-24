@@ -1,0 +1,11 @@
+{
+  "name": "simulateur-ir-maroc",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Simulateur de l'IR au Maroc : barème actuel et réforme 2027 → 2031 (PLF 2027).",
+  "type": "module",
+  "scripts": {
+    "test": "node --test tests/ir.test.mjs",
+    "start": "npx --yes serve ."
+  }
+}

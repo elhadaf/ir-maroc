@@ -1,0 +1,16 @@
+{
+  "name": "Simulateur IR Maroc 2027–2031",
+  "short_name": "IR Maroc",
+  "description": "Impôt sur le revenu et salaire net au Maroc, barème actuel et réforme 2027 → 2031.",
+  "lang": "fr",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f5f2eb",
+  "theme_color": "#0d2340",
+  "icons": [
+    { "src": "icons/icon.svg", "sizes": "any", "type": "image/svg+xml" },
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any maskable" }
+  ]
+}

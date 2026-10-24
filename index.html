@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <title>Simulateur IR Maroc 2027–2031</title>
+  <meta name="description" content="Calculez votre impôt sur le revenu et votre salaire net au Maroc avec le barème actuel et la réforme 2027 → 2031 du PLF 2027.">
+  <meta property="og:title" content="Simulateur IR Maroc 2027–2031">
+  <meta property="og:description" content="Combien la réforme de l'IR vous fait gagner, année par année.">
+  <meta name="theme-color" content="#0d2340">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon.svg" type="image/svg+xml">
+  <link rel="apple-touch-icon" href="icons/icon-192.png">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,600;9..144,700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+  <header class="hero">
+    <div class="wrap">
+      <p class="eyebrow"><span class="dot"></span> PLF 2027 · n° 60.26</p>
+      <h1>Simulateur IR Maroc <span class="years">2027–2031</span></h1>
+      <p class="lead">Votre impôt sur le revenu et votre salaire net, avec le barème actuel puis pour chaque année de la réforme.</p>
+    </div>
+  </header>
+
+  <main class="wrap layout">
+    <!-- Formulaire -->
+    <aside class="panel form" aria-label="Vos informations">
+      <div class="seg" role="tablist" aria-label="Situation">
+        <button role="tab" data-mode="prive">Salarié privé</button>
+        <button role="tab" data-mode="public">Fonctionnaire</button>
+        <button role="tab" data-mode="rni">Revenu imposable</button>
+      </div>
+
+      <div class="fields" data-show="prive public">
+        <label class="field">
+          <span>Salaire brut mensuel</span>
+          <div class="input"><input id="brut" type="number" inputmode="decimal" min="0" step="100"><em>DH</em></div>
+        </label>
+      </div>
+
+      <div class="fields" data-show="prive">
+        <label class="field">
+          <span>CIMR (part salariale) <small>facultatif</small></span>
+          <div class="input"><input id="cimr" type="number" inputmode="decimal" min="0" max="12" step="0.25" placeholder="0"><em>%</em></div>
+        </label>
+        <p class="hint">CNSS 4,48 % (plafonnée à 6 000 DH) et AMO 2,26 % sont calculées automatiquement.</p>
+      </div>
+
+      <div class="fields" data-show="public">
+        <p class="hint">Reportez les montants mensuels de votre bulletin de paie.</p>
+        <div class="grid2">
+          <label class="field"><span>CMR</span><div class="input"><input id="cmr" type="number" inputmode="decimal" min="0" placeholder="0"><em>DH</em></div></label>
+          <label class="field"><span>AMO</span><div class="input"><input id="amo" type="number" inputmode="decimal" min="0" placeholder="0"><em>DH</em></div></label>
+          <label class="field"><span>Mutuelles</span><div class="input"><input id="mutuelles" type="number" inputmode="decimal" min="0" placeholder="0"><em>DH</em></div></label>
+          <label class="field"><span>Autres <small>F.O.S., prêts…</small></span><div class="input"><input id="autres" type="number" inputmode="decimal" min="0" placeholder="0"><em>DH</em></div></label>
+        </div>
+        <label class="field">
+          <span>IR du bulletin <small>recommandé</small></span>
+          <div class="input"><input id="irBulletin" type="number" inputmode="decimal" min="0" placeholder="0"><em>DH</em></div>
+        </label>
+        <p class="hint">Avec l'IR du bulletin, le revenu imposable est retrouvé exactement, indemnités exonérées comprises.</p>
+      </div>
+
+      <div class="fields" data-show="rni">
+        <label class="field">
+          <span>Revenu net imposable mensuel</span>
+          <div class="input"><input id="rni" type="number" inputmode="decimal" min="0" step="100"><em>DH</em></div>
+        </label>
+      </div>
+
+      <div class="field">
+        <span>Personnes à charge <small>conjoint, enfants — 6 au plus</small></span>
+        <div class="stepper">
+          <button type="button" id="moins" aria-label="Retirer une personne">−</button>
+          <output id="personnes">0</output>
+          <button type="button" id="plus" aria-label="Ajouter une personne">+</button>
+        </div>
+      </div>
+
+      <div class="actions">
+        <div class="seg small" role="group" aria-label="Période">
+          <button data-periode="mois">Par mois</button>
+          <button data-periode="an">Par an</button>
+        </div>
+        <button class="ghost" id="partager" type="button">Partager</button>
+      </div>
+    </aside>
+
+    <!-- Résultats -->
+    <section class="results" aria-live="polite">
+      <div class="panel highlight">
+        <p class="kicker" id="kicker">En 2031, la réforme vous fait gagner</p>
+        <p class="big"><span id="gainFinal">0</span> <span class="unit" id="gainUnit">DH / mois</span></p>
+        <div class="stats">
+          <div><span>IR aujourd'hui</span><strong id="irActuel">—</strong></div>
+          <div><span>IR en 2031</span><strong id="ir2031">—</strong></div>
+          <div><span id="netLabel">Net aujourd'hui → 2031</span><strong id="net">—</strong></div>
+          <div><span>Gain cumulé 2027–2031</span><strong id="cumul" class="pos">—</strong></div>
+        </div>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Votre IR année par année</h2>
+          <div class="legend"><i class="sw ir"></i>IR <i class="sw gain"></i>Gain vs aujourd'hui</div>
+        </div>
+        <div id="chart" class="chart" role="img"></div>
+      </div>
+
+      <div class="panel">
+        <h2>Tableau détaillé</h2>
+        <div class="scroll">
+          <table class="t" id="tableau"></table>
+        </div>
+      </div>
+
+      <div class="panel" id="blocBase">
+        <h2>Du brut au revenu imposable</h2>
+        <div class="scroll"><table class="t compact" id="retenues"></table></div>
+        <p class="note" id="noteBase"></p>
+      </div>
+
+      <div class="panel">
+        <div class="panel-head">
+          <h2>Calcul tranche par tranche</h2>
+          <div class="seg small" id="choixAnnee" role="tablist" aria-label="Année"></div>
+        </div>
+        <div class="scroll"><table class="t compact" id="detail"></table></div>
+      </div>
+
+      <div class="panel">
+        <h2>Barèmes comparés</h2>
+        <p class="sub">Taux par tranche de revenu net imposable annuel. Votre tranche est surlignée.</p>
+        <div class="scroll"><table class="t bareme" id="bareme"></table></div>
+      </div>
+
+      <p class="disclaimer">Le projet de loi de finances 2027 n'est pas encore voté et peut être amendé : simulation indicative. Calculs effectués sur votre appareil, aucune donnée envoyée.</p>
+    </section>
+  </main>
+
+  <div class="toast" id="toast" role="status"></div>
+  <script type="module" src="js/app.js"></script>
+</body>
+</html>
